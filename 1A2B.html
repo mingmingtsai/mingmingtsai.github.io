@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>海賊王 1A2B 猜數字</title>
+
+<style>
+    body {
+        margin: 0;
+        font-family: "Microsoft JhengHei", sans-serif;
+        background: linear-gradient(to bottom, #87CEEB, #dff6ff);
+        overflow-x: hidden;
+    }
+
+    /* 海洋背景 */
+    body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background:
+            radial-gradient(circle at 20% 20%, rgba(255,255,255,0.3), transparent 20%),
+            radial-gradient(circle at 80% 40%, rgba(255,255,255,0.25), transparent 20%),
+            linear-gradient(to bottom,
+                rgba(255,255,255,0.1),
+                rgba(0,100,180,0.1));
+        z-index: -2;
+    }
+
+    .container {
+        max-width: 700px;
+        margin: 40px auto;
+        background: rgba(255,255,255,0.92);
+        border-radius: 25px;
+        padding: 30px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        text-align: center;
+    }
+
+    h1 {
+        color: #c0392b;
+        font-size: 42px;
+        margin-bottom: 10px;
+        text-shadow: 2px 2px 0 gold;
+    }
+
+    .subtitle {
+        color: #555;
+        margin-bottom: 25px;
+        font-size: 18px;
+    }
+
+    .pirate {
+        font-size: 70px;
+        margin-bottom: 15px;
+    }
+
+    input {
+        width: 180px;
+        padding: 12px;
+        font-size: 24px;
+        text-align: center;
+        border-radius: 10px;
+        border: 2px solid #3498db;
+    }
+
+    button {
+        padding: 12px 25px;
+        margin: 10px;
+        border: none;
+        border-radius: 12px;
+        font-size: 18px;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+
+    #guessBtn {
+        background: #e67e22;
+        color: white;
+    }
+
+    #guessBtn:hover {
+        background: #d35400;
+        transform: scale(1.05);
+    }
+
+    #restartBtn {
+        background: #3498db;
+        color: white;
+    }
+
+    #restartBtn:hover {
+        background: #2980b9;
+        transform: scale(1.05);
+    }
+
+    .message {
+        margin: 20px 0;
+        font-size: 24px;
+        font-weight: bold;
+        color: #2c3e50;
+        min-height: 35px;
+    }
+
+    .history {
+        margin-top: 20px;
+        text-align: left;
+        max-height: 350px;
+        overflow-y: auto;
+    }
+
+    .record {
+        background: #fff8dc;
+        margin: 8px 0;
+        padding: 12px;
+        border-left: 8px solid #f39c12;
+        border-radius: 10px;
+        font-size: 18px;
+    }
+
+    .footer {
+        margin-top: 20px;
+        color: #666;
+    }
+
+    .victory {
+        animation: bounce 0.8s infinite alternate;
+        color: #e74c3c;
+    }
+
+    @keyframes bounce {
+        from { transform: translateY(0px); }
+        to { transform: translateY(-10px); }
+    }
+
+    @media (max-width: 600px) {
+        h1 {
+            font-size: 30px;
+        }
+
+        .pirate {
+            font-size: 50px;
+        }
+
+        input {
+            width: 150px;
+        }
+    }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="pirate">🏴‍☠️⚓🗺️</div>
+
+    <h1>海賊王 1A2B 猜數字</h1>
+
+    <div class="subtitle">
+        成為海賊王之前，先破解神秘寶藏密碼吧！<br>
+        請猜出 4 個不重複數字。
+    </div>
+
+    <input
+        type="text"
+        id="guessInput"
+        maxlength="4"
+        placeholder="例如：1234">
+
+    <br>
+
+    <button id="guessBtn">⚔️ 出航猜測</button>
+    <button id="restartBtn">🔄 重新冒險</button>
+
+    <div class="message" id="message"></div>
+
+    <div class="history" id="history"></div>
+
+    <div class="footer">
+        A：數字與位置皆正確<br>
+        B：數字正確但位置錯誤
+    </div>
+
+</div>
+
+<script>
+let answer = "";
+let count = 0;
+
+function generateAnswer() {
+    let digits = [];
+
+    while (digits.length < 4) {
+        let n = Math.floor(Math.random() * 10).toString();
+
+        if (!digits.includes(n)) {
+            digits.push(n);
+        }
+    }
+
+    answer = digits.join("");
+    console.log("答案：", answer); // 測試用
+}
+
+function guess() {
+    const input = document.getElementById("guessInput");
+    const value = input.value.trim();
+
+    if (!/^\d{4}$/.test(value)) {
+        showMessage("請輸入 4 位數字！", false);
+        return;
+    }
+
+    if (new Set(value).size !== 4) {
+        showMessage("數字不可重複！", false);
+        return;
+    }
+
+    count++;
+
+    let A = 0;
+    let B = 0;
+
+    for (let i = 0; i < 4; i++) {
+        if (value[i] === answer[i]) {
+            A++;
+        } else if (answer.includes(value[i])) {
+            B++;
+        }
+    }
+
+    addHistory(count, value, A, B);
+
+    if (A === 4) {
+        showMessage(
+            `🎉 恭喜！找到傳說中的寶藏！共猜了 ${count} 次！`,
+            true
+        );
+    } else {
+        showMessage(`結果：${A}A${B}B`, false);
+    }
+
+    input.value = "";
+    input.focus();
+}
+
+function addHistory(step, guess, A, B) {
+    const history = document.getElementById("history");
+
+    const div = document.createElement("div");
+    div.className = "record";
+
+    div.innerHTML =
+        `第 ${step} 次： <strong>${guess}</strong>
+         ➜ ${A}A${B}B`;
+
+    history.prepend(div);
+}
+
+function showMessage(text, win) {
+    const msg = document.getElementById("message");
+
+    msg.textContent = text;
+
+    if (win) {
+        msg.className = "message victory";
+    } else {
+        msg.className = "message";
+    }
+}
+
+function restart() {
+    generateAnswer();
+
+    count = 0;
+
+    document.getElementById("history").innerHTML = "";
+
+    document.getElementById("guessInput").value = "";
+
+    showMessage("新的航海冒險開始！", false);
+
+    document.getElementById("guessInput").focus();
+}
+
+document.getElementById("guessBtn")
+    .addEventListener("click", guess);
+
+document.getElementById("restartBtn")
+    .addEventListener("click", restart);
+
+document.getElementById("guessInput")
+    .addEventListener("keydown", function(e) {
+        if (e.key === "Enter") {
+            guess();
+        }
+    });
+
+generateAnswer();
+showMessage("準備啟航！輸入 4 位不重複數字開始挑戰。", false);
+</script>
+
+</body>
+</html>
