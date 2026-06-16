@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>冰雪童話王國－1A2B猜數字</title>
+
+<style>
+body{
+    margin:0;
+    min-height:100vh;
+    font-family:"Microsoft JhengHei",sans-serif;
+
+    background:linear-gradient(
+        180deg,
+        #b7e7ff,
+        #dff5ff,
+        #f6fbff
+    );
+
+    overflow-x:hidden;
+    text-align:center;
+    color:#0d4d6b;
+}
+
+h1{
+    margin-top:30px;
+    font-size:3em;
+    text-shadow:0 0 15px white;
+}
+
+.subtitle{
+    font-size:1.2em;
+    margin-bottom:20px;
+}
+
+.game-box{
+    width:90%;
+    max-width:600px;
+    margin:auto;
+    background:rgba(255,255,255,0.75);
+
+    border-radius:25px;
+    padding:30px;
+
+    backdrop-filter:blur(10px);
+
+    box-shadow:0 0 30px rgba(100,180,255,0.4);
+}
+
+input{
+    font-size:1.3em;
+    padding:12px;
+    border-radius:15px;
+    border:none;
+    width:180px;
+    text-align:center;
+}
+
+button{
+    font-size:1.1em;
+    padding:12px 20px;
+    margin:10px;
+    border:none;
+    border-radius:15px;
+
+    cursor:pointer;
+
+    background:#6ec5ff;
+    color:white;
+
+    transition:0.3s;
+}
+
+button:hover{
+    transform:scale(1.08);
+    background:#3baeff;
+}
+
+#history{
+    margin-top:20px;
+    text-align:left;
+    max-height:300px;
+    overflow-y:auto;
+}
+
+.record{
+    background:white;
+    border-radius:15px;
+    padding:10px;
+    margin:10px 0;
+}
+
+#result{
+    font-size:1.4em;
+    font-weight:bold;
+    margin-top:20px;
+}
+
+.snow{
+    position:fixed;
+    top:-10px;
+    color:white;
+    user-select:none;
+    animation:fall linear infinite;
+}
+
+@keyframes fall{
+    to{
+        transform:translateY(110vh);
+    }
+}
+</style>
+</head>
+
+<body>
+
+<h1>❄️ 冰雪童話王國 ❄️</h1>
+
+<div class="subtitle">
+神秘的冰晶密碼已經誕生！<br>
+猜出四位不重複數字，解開冰宮的秘密吧！
+</div>
+
+<div class="game-box">
+
+    <h2>1A2B 猜數字</h2>
+
+    <p>
+        規則：輸入 4 個不重複數字<br>
+        A：數字與位置都正確<br>
+        B：數字正確但位置錯誤
+    </p>
+
+    <input id="guess" maxlength="4" placeholder="例如：1234">
+
+    <br>
+
+    <button onclick="checkGuess()">猜看看</button>
+
+    <button onclick="restartGame()">重新開始</button>
+
+    <button onclick="toggleMusic()">🎵 配樂開/關</button>
+
+    <div id="result"></div>
+
+    <div id="history"></div>
+
+</div>
+
+<!-- 背景音樂 -->
+<audio id="bgm" loop>
+    <!-- 請將 Pixabay 下載的音樂改名 winter.mp3 -->
+    <source src="winter.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+let answer = "";
+let count = 0;
+let musicStarted = false;
+
+function generateAnswer(){
+    let nums = ['0','1','2','3','4','5','6','7','8','9'];
+
+    nums.sort(()=>Math.random()-0.5);
+
+    answer = nums.slice(0,4).join('');
+
+    console.log("答案：",answer);
+}
+
+generateAnswer();
+
+function checkGuess(){
+
+    const input = document.getElementById("guess");
+    const guess = input.value.trim();
+
+    if(guess.length!==4){
+        alert("請輸入4位數字！");
+        return;
+    }
+
+    if(!/^\d{4}$/.test(guess)){
+        alert("只能輸入數字！");
+        return;
+    }
+
+    if(new Set(guess).size!==4){
+        alert("數字不能重複！");
+        return;
+    }
+
+    count++;
+
+    let A=0;
+    let B=0;
+
+    for(let i=0;i<4;i++){
+
+        if(guess[i]===answer[i]){
+            A++;
+        }
+        else if(answer.includes(guess[i])){
+            B++;
+        }
+    }
+
+    const history = document.getElementById("history");
+
+    history.innerHTML =
+        `<div class="record">
+            第 ${count} 次：${guess}
+            ➜ ${A}A${B}B
+        </div>` + history.innerHTML;
+
+    if(A===4){
+
+        document.getElementById("result").innerHTML=
+        `🏰 恭喜破解冰晶密碼！<br>
+         共用了 ${count} 次！`;
+
+    }
+
+    input.value="";
+}
+
+function restartGame(){
+
+    generateAnswer();
+
+    count=0;
+
+    document.getElementById("history").innerHTML="";
+    document.getElementById("result").innerHTML="";
+
+    document.getElementById("guess").value="";
+
+    alert("新的冰晶密碼已產生！");
+}
+
+function toggleMusic(){
+
+    const bgm=document.getElementById("bgm");
+
+    if(bgm.paused){
+        bgm.play();
+    }else{
+        bgm.pause();
+    }
+}
+
+document.body.addEventListener("click",()=>{
+
+    if(!musicStarted){
+
+        const bgm=document.getElementById("bgm");
+
+        bgm.play().catch(()=>{});
+
+        musicStarted=true;
+    }
+
+},{once:true});
+
+/* 飄雪效果 */
+for(let i=0;i<50;i++){
+
+    const snow=document.createElement("div");
+
+    snow.className="snow";
+
+    snow.innerHTML="❄";
+
+    snow.style.left=Math.random()*100+"vw";
+
+    snow.style.fontSize=
+        (10+Math.random()*25)+"px";
+
+    snow.style.animationDuration=
+        (5+Math.random()*8)+"s";
+
+    snow.style.opacity=Math.random();
+
+    document.body.appendChild(snow);
+}
+</script>
+
+</body>
+</html>
